@@ -2,11 +2,15 @@
 
 ### WIP 
 
-Remote configuration in DNS records, inspired by CobaltStrike DNS Beacon and LaunchDarkly
+Remote configuration in DNS records, inspired by CobaltStrike DNS Beacon and LaunchDarkly.
+
+Instead of using a service like LaunchDarkly for remote configuration, why not utilise DNS server infrastructure? Feature flags have small data requirements, so fitting them in DNS records isn't a big deal.
 
 
 #### create-record
-Encodes and encrypts key value pairs into strings you can put into DNS TXT records
+Encodes and encrypts key value pairs into strings you can put into DNS TXT records.
+
+Requires DARKLY_PASSKEY env var. The records will be encrypted with AES256
 
 ```
 create-record$ cargo run
