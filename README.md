@@ -2,6 +2,12 @@
 
 ### WIP 
 
+TODO: 
+- Client focused code
+- Cache
+- Error handling
+-------------------------------------------------------------------------------------------------------------
+
 Remote configuration in DNS records, inspired by CobaltStrike DNS Beacon and LaunchDarkly.
 
 Instead of using a service like LaunchDarkly for remote configuration, why not utilise DNS server infrastructure? Feature flags have small data requirements, so fitting them in DNS records isn't a big deal.
