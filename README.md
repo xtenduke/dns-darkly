@@ -28,7 +28,12 @@ Set the value in your DNS configuration
 
 
 #### dns-darkly
-Fetches, decrypts, decodes DNS TXT records, to be used as remote configuration / feature toggling
+Fetches, decrypts, decodes DNS TXT records, to be used as remote configuration / feature toggling.
+
+Set DARKLY_DOMAIN env var to the domain you wish to fetch records for.
+
+You also need the same DARKLY_PASSKEY from the create-record stage
+
 
 ```
 dns-darkly$ cargo run
