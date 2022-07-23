@@ -3,14 +3,20 @@ use trust_dns_resolver::config::*;
 use std::collections::HashMap;
 use base64::{decode};
 use magic_crypt::{new_magic_crypt, MagicCryptTrait};
+use std::env;
 
 
 #[tokio::main]
 async fn main() {
-    query("flags.xtenduke.com".to_string()).await.err();
+    let passkey = match env::var_os("DARKLY_PASSKEY") {
+        Some(value) => value.into_string().unwrap(),
+        None => panic!("$DARKLY_PASSKEY is not set")
+    };
+
+    query("flags.xtenduke.com".to_string(), passkey).await.err();
 }
 
-async fn query(domain: String) -> Result<(), Box<dyn std::error::Error>> {
+async fn query(domain: String, passkey: String) -> Result<(), Box<dyn std::error::Error>> {
     let mut flags: HashMap<String, String> = HashMap::new();
 
     let resolver = TokioAsyncResolver::tokio(
@@ -25,10 +31,9 @@ async fn query(domain: String) -> Result<(), Box<dyn std::error::Error>> {
             let mut i = 1;
             for record in response.iter() {
                 i = i + 1;
-
-                let decrypted = decrypt_string(record.to_string()).unwrap();
+                let decrypted = decrypt_string(record.to_string(), passkey.clone()).unwrap();
                 let decoded = decode_record(decrypted).unwrap();
-                print!("Decoded flag - key: {} value: {}", decoded.0, decoded.1);
+                println!("Decoded flag - key: {} value: {}", decoded.0, decoded.1);
 
                 flags.insert(decoded.0, decoded.1);
             }
@@ -38,8 +43,8 @@ async fn query(domain: String) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn decrypt_string(encrypted: String) -> Option<String> {
-    let magic_crypt = new_magic_crypt!("somesecretpassword", 256);
+fn decrypt_string(encrypted: String, passkey: String) -> Option<String> {
+    let magic_crypt = new_magic_crypt!(passkey, 256);
     let decrypted = magic_crypt.decrypt_base64_to_string(encrypted).unwrap();
     return Some(decrypted);
 }
