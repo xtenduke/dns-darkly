@@ -16,7 +16,12 @@ async fn main() {
         None => panic!("$DARKLY_PASSKEY is not set")
     };
 
-    query("flags.xtenduke.com".to_string(), passkey).await.err();
+    let domain = match env::var_os("DARKLY_DOMAIN") {
+        Some(value) => value.into_string().unwrap(),
+        None => panic!("$DARKLY_DOMAIN is not set")
+    };
+
+    query(domain, passkey).await.err();
 }
 
 async fn query(domain: String, passkey: String) -> Result<(), Box<dyn std::error::Error>> {
