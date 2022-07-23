@@ -5,6 +5,9 @@ use base64::{encode, decode};
 
 #[tokio::main]
 async fn main() {
+    let test_record = encode_record("ipv4".to_string(), "true".to_string());
+    println!("test record: {}", test_record);
+
     query("flags.xtenduke.com".to_string()).await.err();
 }
 
@@ -52,3 +55,19 @@ fn decode_record(record: String) -> Option<(String, String)> {
         value 
     ));
 }
+
+fn encode_record(key: String, value: String) -> String {
+    let encoded_key = encode(key);
+    let encoded_value = encode(value);
+    let encoded = format!("{encoded_key}|{encoded_value}");
+    return encoded;
+}
+
+// async fn request() -> Result<(), Box<dyn std::error::Error>> {
+//     let resp = reqwest::get("https://httpbin.org/ip")
+//         .await?
+//         .json::<HashMap<String, String>>()
+//         .await?;
+//     println!("{:#?}", resp);
+//     Ok(())
+// }
