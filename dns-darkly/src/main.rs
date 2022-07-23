@@ -1,13 +1,12 @@
 use trust_dns_resolver::TokioAsyncResolver;
 use trust_dns_resolver::config::*;
 use std::collections::HashMap;
-use base64::{encode, decode};
+use base64::{decode};
+use magic_crypt::{new_magic_crypt, MagicCryptTrait};
+
 
 #[tokio::main]
 async fn main() {
-    let test_record = encode_record("ipv4".to_string(), "true".to_string());
-    println!("test record: {}", test_record);
-
     query("flags.xtenduke.com".to_string()).await.err();
 }
 
@@ -27,7 +26,8 @@ async fn query(domain: String) -> Result<(), Box<dyn std::error::Error>> {
             for record in response.iter() {
                 i = i + 1;
 
-                let decoded = decode_record(record.to_string()).unwrap();
+                let decrypted = decrypt_string(record.to_string()).unwrap();
+                let decoded = decode_record(decrypted).unwrap();
                 print!("Decoded flag - key: {} value: {}", decoded.0, decoded.1);
 
                 flags.insert(decoded.0, decoded.1);
@@ -36,6 +36,12 @@ async fn query(domain: String) -> Result<(), Box<dyn std::error::Error>> {
     }
 
     Ok(())
+}
+
+fn decrypt_string(encrypted: String) -> Option<String> {
+    let magic_crypt = new_magic_crypt!("somesecretpassword", 256);
+    let decrypted = magic_crypt.decrypt_base64_to_string(encrypted).unwrap();
+    return Some(decrypted);
 }
 
 fn decode_record(record: String) -> Option<(String, String)> {
@@ -55,19 +61,3 @@ fn decode_record(record: String) -> Option<(String, String)> {
         value 
     ));
 }
-
-fn encode_record(key: String, value: String) -> String {
-    let encoded_key = encode(key);
-    let encoded_value = encode(value);
-    let encoded = format!("{encoded_key}|{encoded_value}");
-    return encoded;
-}
-
-// async fn request() -> Result<(), Box<dyn std::error::Error>> {
-//     let resp = reqwest::get("https://httpbin.org/ip")
-//         .await?
-//         .json::<HashMap<String, String>>()
-//         .await?;
-//     println!("{:#?}", resp);
-//     Ok(())
-// }
