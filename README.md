@@ -4,7 +4,6 @@
 
 TODO: 
 - Client focused code
-- Cache
 -------------------------------------------------------------------------------------------------------------
 
 Remote configuration in DNS records, inspired by CobaltStrike DNS Beacon and LaunchDarkly.
