@@ -1,14 +1,10 @@
 [package]
-name = "dns-darkly"
+name = "sample"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-base64 = "0.13.0"
-magic-crypt = "3.1.10"
-reqwest = { version = "0.11.11", features = ["json"] }
 tokio = { version = "1.20.0", features = ["full"] }
-trust-dns-resolver = { version = "0.21.2", features = ["dns-over-rustls"] }
-
+dns_darkly = { path = "../dns_darkly" }

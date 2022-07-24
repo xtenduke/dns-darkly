@@ -1,36 +1,59 @@
+use base64::decode;
+use magic_crypt::MagicCryptError;
+use magic_crypt::{new_magic_crypt, MagicCryptTrait};
+use std::collections::HashMap;
 use std::error::Error;
 use std::fmt;
-use magic_crypt::MagicCryptError;
-use trust_dns_resolver::TokioAsyncResolver;
 use trust_dns_resolver::config::*;
-use std::collections::HashMap;
-use base64::{decode};
-use magic_crypt::{new_magic_crypt, MagicCryptTrait};
-use std::env;
+use trust_dns_resolver::TokioAsyncResolver;
 
-
-#[tokio::main]
-async fn main() {
-    let passkey = match env::var_os("DARKLY_PASSKEY") {
-        Some(value) => value.into_string().unwrap(),
-        None => panic!("$DARKLY_PASSKEY is not set")
-    };
-
-    let domain = match env::var_os("DARKLY_DOMAIN") {
-        Some(value) => value.into_string().unwrap(),
-        None => panic!("$DARKLY_DOMAIN is not set")
-    };
-
-    query(domain, passkey).await.err();
+pub struct RecordSet {
+    records: HashMap<String, String>,
 }
 
-async fn query(domain: String, passkey: String) -> Result<(), Box<dyn std::error::Error>> {
+impl RecordSet {
+    fn new(records: HashMap<String, String>) -> RecordSet {
+        RecordSet { records: records }
+    }
+
+    pub fn boolean(&self, key: String) -> Option<bool> {
+        let val = self.value(key);
+        if let Some(val) = val {
+            return Some(match val.as_str() {
+                "true" => true,
+                "t" => true,
+                "f" => false,
+                "" => false,
+                _ => false
+            })
+        } else {
+            return Some(false);
+        }
+    }
+
+    pub fn string(&self, key: String) -> Option<String> {
+        return self.value(key);
+    }
+
+    fn value(&self, key: String) -> Option<String> {
+        if self.records.contains_key(&key) {
+            let value = self.records.get(&key);
+            return Some(value.unwrap().to_string());
+        } else {
+            return None;
+        }
+    }
+}
+
+pub async fn query(
+    domain: String,
+    passkey: String,
+    ) -> Result<RecordSet, Box<dyn std::error::Error>> {
     let mut flags: HashMap<String, String> = HashMap::new();
 
-    let resolver = TokioAsyncResolver::tokio(
-        ResolverConfig::cloudflare_tls(),
-        ResolverOpts::default()
-    ).unwrap();
+    let resolver =
+        TokioAsyncResolver::tokio(ResolverConfig::cloudflare_tls(), ResolverOpts::default())
+        .unwrap();
     let response = resolver.txt_lookup(domain).await;
 
     match response {
@@ -47,18 +70,26 @@ async fn query(domain: String, passkey: String) -> Result<(), Box<dyn std::error
                         println!("Decoded flag - key: {} value: {}", decoded.0, decoded.1);
                         flags.insert(decoded.0, decoded.1);
                     } else {
-                        println!("Failed to decode value: {}, cause: {}", record.to_string(), decoded.err().unwrap());
+                        println!(
+                            "Failed to decode value: {}, cause: {}",
+                            record.to_string(),
+                            decoded.err().unwrap()
+                            );
                         continue;
                     }
                 } else {
-                    println!("Failed to decrypt value: {} cause: {}", record.to_string(), decrypted.err().unwrap());
+                    println!(
+                        "Failed to decrypt value: {} cause: {}",
+                        record.to_string(),
+                        decrypted.err().unwrap()
+                        );
                     continue;
                 }
             }
         }
     }
 
-    Ok(())
+    Ok(RecordSet::new(flags))
 }
 
 #[derive(Debug)]
@@ -68,7 +99,9 @@ struct DecodeRecordError {
 
 impl DecodeRecordError {
     fn new(msg: &str) -> DecodeRecordError {
-        DecodeRecordError{cause: msg.to_string()}
+        DecodeRecordError {
+            cause: msg.to_string(),
+        }
     }
 }
 
