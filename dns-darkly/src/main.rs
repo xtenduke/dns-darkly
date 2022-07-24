@@ -28,7 +28,7 @@ async fn query(domain: String, passkey: String) -> Result<(), Box<dyn std::error
     let mut flags: HashMap<String, String> = HashMap::new();
 
     let resolver = TokioAsyncResolver::tokio(
-        ResolverConfig::default(),
+        ResolverConfig::cloudflare_tls(),
         ResolverOpts::default()
     ).unwrap();
     let response = resolver.txt_lookup(domain).await;
